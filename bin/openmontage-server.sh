@@ -11,4 +11,7 @@ DATA="${CLAUDE_PLUGIN_DATA:-$ROOT/.data}"
 
 "$DIR/openmontage-bootstrap.sh"    # fast no-op once built
 
+# Run from the engine dir so `python -m mcp_server.server` resolves regardless of
+# whether the host honored .mcp.json's `cwd`.
+cd "$ROOT/engine"
 exec "$DATA/venv/bin/python" -m mcp_server.server

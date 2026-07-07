@@ -15,7 +15,11 @@ mkdir -p "$DATA"
 
 req_hash=""
 if [ -f "$ENGINE/requirements.txt" ]; then
-  req_hash="$(shasum "$ENGINE/requirements.txt" | awk '{print $1}')"
+  if command -v shasum >/dev/null 2>&1; then
+    req_hash="$(shasum "$ENGINE/requirements.txt" | awk '{print $1}')"
+  else
+    req_hash="$(sha1sum "$ENGINE/requirements.txt" | awk '{print $1}')"
+  fi
 fi
 cur="$(cat "$STAMP" 2>/dev/null || true)"
 

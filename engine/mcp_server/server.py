@@ -141,22 +141,29 @@ def _run_tool(
         preview["project_dir"] = str(project_dir)
         return preview
 
-    # Money gate: paid / API tools require explicit approval.
+    # Money gate — FAIL CLOSED. Gate anything that (a) costs money, (b) might
+    # route to a paid provider, or (c) whose cost we couldn't determine. HYBRID
+    # tools are the selectors (image/tts/video) that route to runway/kling/
+    # elevenlabs/… — they must NOT slip through just because estimate_cost threw
+    # or a provider forgot to override it. Only clearly-free tools with a KNOWN
+    # $0 estimate run ungated.
     try:
         est_cost = float(tool.estimate_cost(safe_inputs) or 0.0)
+        cost_known = True
     except Exception:
-        est_cost = 0.0
-    is_paid = est_cost > 0 or tool.runtime.value == "api"
+        est_cost, cost_known = 0.0, False
+    is_paid = est_cost > 0 or tool.runtime.value in ("api", "hybrid") or not cost_known
     if is_paid and not approved:
         return {
             "success": False,
             "status": "approval_required",
             "estimated_cost_usd": est_cost,
+            "cost_known": cost_known,
             "runtime": tool.runtime.value,
             "message": (
-                f"{name} is a paid/API tool (est ${est_cost:.4f}). "
-                "Re-call run_tool with approved=true to proceed, "
-                "or use dry_run=true to preview."
+                f"{name} may incur cost (est ${est_cost:.4f}"
+                f"{'' if cost_known else ', cost undetermined'}, runtime={tool.runtime.value}). "
+                "Re-call run_tool with approved=true to proceed, or dry_run=true to preview."
             ),
         }
 
