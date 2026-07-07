@@ -1,0 +1,13 @@
+# Plugin runtime state — never published to B.
+.data/
+
+# Engine build artifacts — rebuilt on install by bin/openmontage-bootstrap.sh.
+engine/.venv/
+engine/venv/
+engine/**/node_modules/
+engine/**/__pycache__/
+*.pyc
+
+# Per-project write-state.
+engine/projects/
+.DS_Store

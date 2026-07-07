@@ -1,0 +1,14 @@
+{
+  "name": "openmontage",
+  "description": "Agent-driven video production — explainers, vertical shorts (Douyin/TikTok/Shorts), animations — via the OpenMontage engine, over MCP.",
+  "license": "AGPL-3.0",
+  "keywords": [
+    "video",
+    "remotion",
+    "tts",
+    "douyin",
+    "shorts",
+    "explainer",
+    "animation"
+  ]
+}

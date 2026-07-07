@@ -1,0 +1,13 @@
+{
+  "name": "openmontage",
+  "owner": {
+    "name": "tsgx1990"
+  },
+  "plugins": [
+    {
+      "name": "openmontage",
+      "source": ".",
+      "description": "OpenMontage video-production plugin (engine bundled)."
+    }
+  ]
+}

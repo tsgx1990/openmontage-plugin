@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "openmontage": {
+      "command": "${CLAUDE_PLUGIN_ROOT}/bin/openmontage-server.sh",
+      "cwd": "${CLAUDE_PLUGIN_ROOT}/engine"
+    }
+  }
+}
