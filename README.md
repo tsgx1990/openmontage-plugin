@@ -5,8 +5,11 @@ Agent-driven video production inside Claude Code: explainers, vertical shorts
 [OpenMontage](https://github.com/calesthio/OpenMontage) engine (bundled here in
 `engine/`) and exposed to Claude Code over MCP.
 
-> This repo is **generated** by the publisher in the private engine repo. Edit
-> the engine / templates there, not here.
+> ⚠️ **This repo is generated — do not edit it directly.** It is built and
+> published from a private engine repo by its one-click publisher. Every release
+> resets the entire tree (everything except `.git`/`LICENSE`) to match the
+> engine, so any manual change here is discarded on the next publish. Change the
+> engine or the plugin templates upstream instead.
 
 ## What's inside
 

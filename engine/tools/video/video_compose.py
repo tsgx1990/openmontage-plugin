@@ -740,6 +740,35 @@ class VideoCompose(BaseTool):
             )
         return comp
 
+    # Transient Remotion / headless-Chrome failures worth one more shot: the
+    # dev-server "no response", browser navigation timeouts, and target-closed
+    # races that are intermittent rather than deterministic.
+    _REMOTION_RETRYABLE = (
+        "got no response",
+        "localhost:3000",
+        "timed out",
+        "target closed",
+        "navigation failed",
+        "socket hang up",
+    )
+
+    def _run_remotion(self, cmd, *, cwd, timeout, attempts: int = 3):
+        """Run an `npx remotion render` command, retrying transient headless
+        failures. On retry, force single concurrency (steadier) unless the caller
+        already set one. Re-raises the original error on the final attempt so the
+        caller's handler can surface the captured stderr."""
+        for attempt in range(attempts):
+            run_cmd = list(cmd)
+            if attempt > 0 and not any(str(a).startswith("--concurrency") for a in run_cmd):
+                run_cmd.append("--concurrency=1")
+            try:
+                return self.run_command(run_cmd, timeout=timeout, cwd=cwd)
+            except subprocess.CalledProcessError as e:
+                blob = ((e.stderr or "") + (e.stdout or "")).lower()
+                if attempt < attempts - 1 and any(p in blob for p in self._REMOTION_RETRYABLE):
+                    continue
+                raise
+
     def _render_via_atelier(
         self,
         inputs: dict[str, Any],
@@ -861,8 +890,16 @@ class VideoCompose(BaseTool):
 
         try:
             # Run from inside the composer dir so npx resolves the local
-            # remotion binary (mirrors _remotion_render).
-            self.run_command(cmd, timeout=1800, cwd=composer_dir)
+            # remotion binary (mirrors _remotion_render). Retries transient
+            # headless-browser failures.
+            self._run_remotion(cmd, cwd=composer_dir, timeout=1800)
+        except subprocess.CalledProcessError as e:
+            detail = (e.stderr or e.stdout or "").strip()
+            tail = "\n".join(detail.splitlines()[-25:]) if detail else "(no output captured)"
+            return ToolResult(
+                success=False,
+                error=f"Atelier (bespoke) Remotion render failed (exit {e.returncode}):\n{tail}",
+            )
         except Exception as e:
             return ToolResult(success=False, error=f"Atelier (bespoke) Remotion render failed: {e}")
 
@@ -1821,8 +1858,8 @@ class VideoCompose(BaseTool):
             # Invoke from inside the composer dir so npx can resolve the
             # local remotion binary via node_modules/.bin. Without this,
             # Windows npx cannot locate the CLI and returns "could not
-            # determine executable to run".
-            self.run_command(cmd, timeout=subprocess_timeout, cwd=composer_dir)
+            # determine executable to run". Retries transient headless failures.
+            self._run_remotion(cmd, cwd=composer_dir, timeout=subprocess_timeout)
         except subprocess.CalledProcessError as e:
             # run_command uses check=True + capture_output, so the useful
             # Remotion diagnostics live in stderr/stdout — surface the tail
