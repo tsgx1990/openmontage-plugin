@@ -50,6 +50,39 @@ from tools.base_tool import (
 )
 
 
+def _system_chrome_executable() -> Optional[str]:
+    """Path to a system Chrome/Chromium so Remotion renders reuse it instead of
+    downloading its own ~140MB Chrome Headless Shell on first render.
+
+    Returns None if none is found (Remotion then falls back to its bundled
+    download). Override with the OPENMONTAGE_CHROME_EXECUTABLE env var.
+    """
+    import os
+    import shutil
+
+    override = os.environ.get("OPENMONTAGE_CHROME_EXECUTABLE")
+    if override and Path(override).exists():
+        return override
+
+    candidates = [
+        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+        "/Applications/Chromium.app/Contents/MacOS/Chromium",
+        "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary",
+        r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+        r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+    ]
+    for name in ("google-chrome", "google-chrome-stable", "chromium",
+                 "chromium-browser", "chrome"):
+        found = shutil.which(name)
+        if found:
+            candidates.append(found)
+
+    for path in candidates:
+        if path and Path(path).exists():
+            return path
+    return None
+
+
 class VideoCompose(BaseTool):
     name = "video_compose"
     version = "0.1.0"
@@ -819,6 +852,12 @@ class VideoCompose(BaseTool):
             cmd.append(f"--crf={bespoke['crf']}")
         if bespoke.get("concurrency"):
             cmd.append(f"--concurrency={bespoke['concurrency']}")
+
+        # Reuse a system Chrome when present so first render doesn't download
+        # Remotion's ~140MB Chrome Headless Shell.
+        chrome = _system_chrome_executable()
+        if chrome:
+            cmd.append(f"--browser-executable={chrome}")
 
         try:
             # Run from inside the composer dir so npx resolves the local
@@ -1771,6 +1810,12 @@ class VideoCompose(BaseTool):
                 subprocess_timeout = max(subprocess_timeout, ms // 1000 + 60)
             except (TypeError, ValueError):
                 pass
+
+        # Reuse a system Chrome when present so first render doesn't download
+        # Remotion's ~140MB Chrome Headless Shell.
+        chrome = _system_chrome_executable()
+        if chrome:
+            cmd.append(f"--browser-executable={chrome}")
 
         try:
             # Invoke from inside the composer dir so npx can resolve the

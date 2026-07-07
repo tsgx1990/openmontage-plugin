@@ -14,7 +14,7 @@ Agent-driven video production inside Claude Code: explainers, vertical shorts
 - `.mcp.json` — spawns the engine's MCP server (`openmontage`).
 - `skills/openmontage/SKILL.md` — the router Claude follows to make a video.
 - `commands/make-video.md` — the `/make-video` slash command.
-- `bin/`, `hooks/`, `setup.sh` — one-time dependency bootstrap (builds a Python venv + Node modules in the plugin's data dir).
+- `bin/`, `hooks/` — automatic one-time dependency bootstrap (builds a Python venv + Node modules in the plugin's data dir on first use; no manual step needed).
 
 ## Install
 
@@ -24,9 +24,9 @@ Agent-driven video production inside Claude Code: explainers, vertical shorts
 ```
 
 Requirements on the machine: **Python 3.11+**, **Node 18+**, **ffmpeg**, and
-**Google Chrome** (Remotion renders with the system Chrome). The first use
-builds the engine dependencies automatically (a minute or two); or run
-`./setup.sh` once up front.
+**Google Chrome** (Remotion renders with the system Chrome — no separate
+browser download). The first use builds the engine dependencies automatically
+(a minute or two); everything after is instant.
 
 Then, from any project: `/make-video 30s vertical explainer about X, free path`.
 The finished MP4 lands under `<your-project>/.openmontage/projects/`.
